@@ -3,7 +3,12 @@ from stem.descriptor import parse_file
 import stem.process
 import pprint
 import os
-
+import datetime
+import threading
+import time
+import pycurl
+import certifi
+import io
 ##TODO: Implement try and except argument with the custom errors used by stem
 
 
@@ -13,8 +18,31 @@ class baitConnector:
 		self._setTorrcConfiguration(config)
 		self._initiateTorProcess()
 		self._initiateTorController()
-
+		self._initiatePycurlHandle()
+		##This Datastructure will use fingerprint: { datetime: (username, password)}
+		self.baitConnections = {}
+		self.shutdownEvent = threading.Event()
 		
+
+
+	def _initiatePycurlHandle(self):
+		self.curlHandle = pycurl.Curl()
+		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
+		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
+		##TODO: Tor may be listening on a different port --> Remove hardcoded values
+		self.curlHandle.setopt(pycurl.PROXYPORT, 9050)
+		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
+		
+
+	##TODO: Provide more options with the request, instead of just URL
+	def requestHTTPThroughTor(self, URL):
+		output = io.BytesIO()
+		self.curlHandle.setopt(pycurl.URL, URL)
+		self.curlHandle.setopt(pycurl.WRITEDATA, output)
+		self.curlHandle.perform()
+		return output.getvalue()
+
+	
 
 	def _setTorrcConfiguration(self, config):
 		##TODO: Consider adding error checking for Torrc config arguments
@@ -68,14 +96,87 @@ class baitConnector:
 		for desc in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
 			if desc.digest in exit_digests:
 				exit_fingerprints.add(desc.fingerprint)
-	
-		return exit_fingerprints
+
+		##With the exit nodes we want to associate a datetime
+
+		##The structure wants to take into account previous retrievals
+		self.exitNodes = exit_fingerprints
+
+
+	def testExitNode(self, fingerprint):
+		##First we need to reload tor with the new torrc that has the exit node we want
+		##TODO: It's possible that a fingerprint we had no longer exists, so we need proper exception handling here
+		try:
+			print(fingerprint)
+			self.controller.set_conf("ExitNodes", fingerprint)
+		except Exception as e:
+			print(e)
+			return
+
+		##Now generate the bait credentials here
+		# username, password = credentialGenerator.generateCreds()
+
+		##Now we format the username and password into the crafted http request
+		##The crafted http request needs to have some variablility to it, so that it is harder to identify
+		# httpRequest = self.formBaitHTTPRequest(username, password)
+		
+		##The request crafting is dependent on the service that hides behind the proxy. We'll generate it in a compatible method
+		##Therefore we require the user who decides on the service to create a json configuration file
+
+		##NOTE: Pycurl is using a cached version of the results, so we will initate the pycurl handle for every connection just to be sage
+		##NOTE: FRESH_CONNECT is an option in libcurl that might help us
+		self._initiatePycurlHandle()
+		try:
+			result = self.requestHTTPThroughTor("http://icanhazip.com")
+		except Exception:
+			return
+
+		## Since the connection was succesful, we now store it in our data structure
+		self.storeExitNodeBaitCreds(fingerprint, username, password)
+
+
+	##NOTE: Currently we are storing our bait requests in memory
+	##TODO: However, we want to end up storing this in a database 
+	def storeExitNodeBaitCreds(self, fingerprint, username, password):
+		baitConnection = [username, password, datetime.datetime()]
+		if self.baitConnections.get(fingerprint) == None:
+			self.baitConnections[fingerprint] = [baitConnection]
+		else:
+			self.baitConnections[fingerprint].append(baitConnection)
+
+
+		
+
+
+
+	def runBaitConnector(self):
+		##NOTE: Is there a reason to store all scans for exit nodes
+		##First we get the exit nodes fingerprints
+		while self.shutdownEvent.is_set() == False:
+			self.retrieveExitNodes()
+
+			for exitNodeFingerprint in self.exitNodes:
+				self.testExitNode(exitNodeFingerprint)
+
+				time.sleep(5)
+		
+
+
+
+		##We then loop through each fingerprint (waiting a set period to avoid overloading the network)
+		
+		##we create a circuit with that exit node as our network
+
+		##We then send the bait connection over via the tor port
+
+		return
+
 
 
 def main():
 	bc = baitConnector()
-	print(len(bc.retrieveExitNodes()))
-
+	# print(len(bc.retrieveExitNodes()))
+	bc.runBaitConnector()
 	bc.shutdownTorController()
 	bc.shutdownTorProcess()
 
