@@ -2,4 +2,8 @@
 stem
 socketserver
 
+## To specify the version
+pycurl
+certifi
+
 
