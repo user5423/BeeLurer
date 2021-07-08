@@ -22,8 +22,7 @@ class proxyReqHandler(socketserver.BaseRequestHandler):
         ##TODO: Consider using a HTTP parser to get port number address and other relevant information
         self.data = self.request.recv(1024).strip().replace(b"127.0.0.1:9999", b"127.0.0.1:80")
 
-
-        ##For some reason, the curl re
+        ##For some reason, when performing curl to localhost:80, we are missing the termination sequence of chars for a http request
         self.data += b'\r\n\r\n'
         ## We then pass the data to the proxyConn that we setup
         retVal = self.proxyConn.sendall(self.data)
