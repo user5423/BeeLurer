@@ -22,7 +22,7 @@ import secrets
 # ==>For now we'll just stick with variable length strings made of random characters. The solution we want 
 
 
-##TODO: We need to expand this from a simple username, password credential generation after PoC developed
+##TODO: We need to expand this from a simple username, password credential generation after PoC developed to a range of authentication methods
 class credentialGenerator:
     def __init__(self):
         self.usernamesUsed = 0
@@ -38,7 +38,6 @@ class credentialGenerator:
     def generatePassword(self):
         return secrets.token_urlsafe(random.randint(8, 12))
             
-
     def generateCredentials(self):
         while True:
             userpassCreds = self.generateUsername(), self.generatePassword()
@@ -49,8 +48,11 @@ class credentialGenerator:
         return userpassCreds
 
 
+class username:
+    pass
 
-
+class password:
+    pass
 
 ## Once we have generated user credentials we use stem to send them to the tor network
 
