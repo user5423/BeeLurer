@@ -195,13 +195,15 @@ class baitConnector:
 			return None
 
 		## Since the connection was succesful, we now store it in our data structure
-		# self.storeExitNodeBaitCreds(fingerprint, username, password)
+		self.logExitNodeConnection(fingerprint, httpTemplateRequest["variables"])
 
 
 	##NOTE: Currently we are storing our bait requests in memory
 	##TODO: However, we want to end up storing this in a database 
-	def storeExitNodeBaitCreds(self, fingerprint, username, password):
-		baitConnection = [username, password, datetime.datetime()]
+	def logExitNodeConnection(self, fingerprint, variables):
+		##Here we sift through the variables that are used for authentication
+		##TODO: This will be a more extensive function once we allow for other forms of http authentication
+		baitConnection = (variables["username"], variables["password"], datetime.datetime())
 		if self.baitConnections.get(fingerprint) == None:
 			self.baitConnections[fingerprint] = [baitConnection]
 		else:
