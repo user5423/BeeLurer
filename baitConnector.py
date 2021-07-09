@@ -9,7 +9,8 @@ import time
 import pycurl
 import certifi
 import io
-
+import colorama
+import json
 
 from credentialGenerator import credentialGenerator
 from credentialGenerator import credentialGenerator as cg
@@ -20,8 +21,8 @@ from credentialGenerator import credentialGenerator as cg
 
 
 class baitConnector:
-	def __init__(self, config=None):
-		self._setTorrcConfiguration(config)
+	def __init__(self, torrcConfig=None):
+		self._setTorrcConfiguration(torrcConfig)
 		self._initiateTorProcess()
 		self._initiateTorController()
 
@@ -32,17 +33,10 @@ class baitConnector:
 		##This Datastructure will use fingerprint: { datetime: (username, password)}
 		self.baitConnections = {}
 		self.shutdownEvent = threading.Event()
-		
 
-		self.requestFormat = {"method": "GET",
-								"url" : "https://example.com/something?user={username}&pass={password}",
-								"headers": None,
-								"body": None,
-								##This will hold the variables that will replace the template -- the string to replace will map to another string that maps to a type that we will then use to generate suitable creds
-								"variables": {"password" : cg.password,
-											  "username" : cg.username}
+		##TODO: Consider allowing multiple request formats after MVP developed
+		self.loadRequestFormat()
 
-		}
 
 	def _initateCredentialGenerator(self):
 		self.credentialGenerator = credentialGenerator()
@@ -97,8 +91,20 @@ class baitConnector:
 		self.controller.close()
 
 
+
+	def loadRequestFormat(self):
+		with open("requestFormat.json") as fp:
+			self.requestFormat = json.load(fp)
+
+
 	def craftHTTPRequest(self):
 		##First we need the reqFormat loaded into a variable in the object
+
+		##We first start by generating the values for the variables
+
+		##Then we find the variable in the template for url, headers, and body and replace them
+
+		##We then return the new url, headers, and body, which will then be used to perform the request
 		return
 
 
