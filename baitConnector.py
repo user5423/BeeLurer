@@ -1,10 +1,11 @@
-from re import template
 from stem.control import Controller
 from stem.descriptor import parse_file
 import stem.process
+from datetime import datetime
+from re import template
+
 import pprint
 import os
-import datetime
 import threading
 import time
 import pycurl
@@ -102,7 +103,6 @@ class baitConnector:
 		##Then we find the variable in the template for url, headers, and body and replace them
 		requestTemplate = self.templateReplaceVariables(requestFormat)
 		##Return the requestTemplate to be used in the requestThroughTor methods
-		print(requestTemplate)
 		return requestTemplate
 
 
@@ -121,7 +121,7 @@ class baitConnector:
 		##Here we loop over the URL, Headers, and Body and perform replacement on {defaultVal}
 		for key, value in requestFormat["variables"].items():
 			template = "{" + key + "}"
-			requestFormat["url"].replace(template, value)
+			requestFormat["url"] = requestFormat["url"].replace(template, value)
 
 			for index in range(len(requestFormat["headers"])):
 				requestFormat["headers"][index] = requestFormat["headers"][index].replace(template, value)
@@ -186,6 +186,9 @@ class baitConnector:
 
 		encodedURL = httpTemplateRequest["url"]
 		headers = httpTemplateRequest["headers"]
+		print(encodedURL)
+		print(headers)
+		print("\n\n")
 		# body = httpTemplateRequest["body"]
 
 		try:
@@ -203,7 +206,7 @@ class baitConnector:
 	def logExitNodeConnection(self, fingerprint, variables):
 		##Here we sift through the variables that are used for authentication
 		##TODO: This will be a more extensive function once we allow for other forms of http authentication
-		baitConnection = (variables["username"], variables["password"], datetime.datetime())
+		baitConnection = (variables["username"], variables["password"], datetime.now())
 		if self.baitConnections.get(fingerprint) == None:
 			self.baitConnections[fingerprint] = [baitConnection]
 		else:
