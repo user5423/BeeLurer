@@ -26,6 +26,7 @@ import secrets
 class credentialGenerator:
     def __init__(self):
         self.usernamesUsed = 0
+        self.credentialsUsed = []
 
     def generateUsername(self):
         with open("wordlists/jeanphorn-wordlist-usernames.txt") as infile:
@@ -39,7 +40,16 @@ class credentialGenerator:
             
 
     def generateCredentials(self):
-        return self.generateUsername(), self.generatePassword()
+        while True:
+            userpassCreds = self.generateUsername(), self.generatePassword()
+            if userpassCreds not in self.credentialsUsed:
+                self.credentialsUsed.append(userpassCreds)
+                break
+
+        return userpassCreds
+
+
+
 
 
 ## Once we have generated user credentials we use stem to send them to the tor network
