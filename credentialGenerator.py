@@ -22,25 +22,44 @@ import secrets
 # ==>For now we'll just stick with variable length strings made of random characters. The solution we want 
 
 
-##TODO: We need to expand this from a simple username, password credential generation after PoC developed
+##TODO: We need to expand this from a simple username, password credential generation after PoC developed to a range of authentication methods
 class credentialGenerator:
     def __init__(self):
-        self.usernamesUsed = 0
+        self.credentialsUsed = []
 
-    def generateUsername(self):
+    def generateUsername(self, minLength=5, maxLength=13):
         with open("wordlists/jeanphorn-wordlist-usernames.txt") as infile:
-            for i in range(self.usernamesUsed+1):
+            ##TODO: This is a quick mehtod, but is computationally inefficient
+            for i in range(random.randint(1, 10000)):
                 username = infile.readline()
-            
-            return username.strip("\n")
 
-    def generatePassword(self):
-        return secrets.token_urlsafe(random.randint(8, 12))
-            
+            ##TODO: THis will have more extensive options to get usernames that look more realistic
+            ##NOTE: -1 is for the \n at the end of the string
+            while True:
+                if minLength <= len(username)-1 <= maxLength:
+                    break
+                username = infile.readline()           
 
+        return username.strip("\n")
+
+    def generatePassword(self, minLength=8, maxLength=12):
+        return secrets.token_urlsafe(random.randint(minLength, maxLength))
+            
     def generateCredentials(self):
-        return self.generateUsername(), self.generatePassword()
+        while True:
+            userpassCreds = self.generateUsername(), self.generatePassword()
+            if userpassCreds not in self.credentialsUsed:
+                self.credentialsUsed.append(userpassCreds)
+                break
 
+        return userpassCreds
+
+
+class username:
+    pass
+
+class password:
+    pass
 
 ## Once we have generated user credentials we use stem to send them to the tor network
 

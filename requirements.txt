@@ -1,6 +1,5 @@
 ## Unspecified version packages required ##
 stem
-socketserver
 
 ## To specify the version
 pycurl

@@ -1,28 +1,47 @@
 from stem.control import Controller
 from stem.descriptor import parse_file
 import stem.process
+from datetime import datetime
+from re import template
+
 import pprint
 import os
-import datetime
 import threading
 import time
 import pycurl
 import certifi
 import io
+import colorama
+import json
+import copy
+from credentialGenerator import credentialGenerator
+from credentialGenerator import credentialGenerator as cg
+
 ##TODO: Implement try and except argument with the custom errors used by stem
 
+##We need a way to allow the user to show how to create the request
 
 
 class baitConnector:
-	def __init__(self, config=None):
-		self._setTorrcConfiguration(config)
+	def __init__(self, torrcConfig=None):
+		self._setTorrcConfiguration(torrcConfig)
 		self._initiateTorProcess()
 		self._initiateTorController()
+
 		self._initiatePycurlHandle()
+		self._initateCredentialGenerator()
+
+		self.sleepTime = 5
 		##This Datastructure will use fingerprint: { datetime: (username, password)}
 		self.baitConnections = {}
 		self.shutdownEvent = threading.Event()
-		
+
+		##TODO: Consider allowing multiple request formats after MVP developed
+		self.loadRequestFormat()
+
+
+	def _initateCredentialGenerator(self):
+		self.credentialGenerator = credentialGenerator()
 
 
 	def _initiatePycurlHandle(self):
@@ -30,19 +49,9 @@ class baitConnector:
 		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
 		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
 		##TODO: Tor may be listening on a different port --> Remove hardcoded values
-		self.curlHandle.setopt(pycurl.PROXYPORT, 9050)
+		self.curlHandle.setopt(pycurl.PROXYPORT, 9050) 
 		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
 		
-
-	##TODO: Provide more options with the request, instead of just URL
-	def requestHTTPThroughTor(self, URL):
-		output = io.BytesIO()
-		self.curlHandle.setopt(pycurl.URL, URL)
-		self.curlHandle.setopt(pycurl.WRITEDATA, output)
-		self.curlHandle.perform()
-		return output.getvalue()
-
-	
 
 	def _setTorrcConfiguration(self, config):
 		##TODO: Consider adding error checking for Torrc config arguments
@@ -69,19 +78,72 @@ class baitConnector:
 		try:
 			self.controller.set_caching(False)
 			self.controller.authenticate()
+			print("tor controller created")
 		except Exception as e:
 			print(e)
-			return
-
-		print("tor controller created")
 
 
 	def shutdownTorProcess(self):
 		self.tor_process.kill()
 
-
 	def shutdownTorController(self):
 		self.controller.close()
+
+
+	def loadRequestFormat(self):
+		with open("requestFormat.json") as fp:
+			self.requestFormat = json.load(fp)
+
+
+	def craftHTTPTemplateRequest(self):
+		##First we need the reqFormat loaded into a variable in the object
+		requestFormat = copy.deepcopy(self.requestFormat)
+		##We first start by generating the values for the variables
+		requestFormat = self.generateVariables(requestFormat)
+		##Then we find the variable in the template for url, headers, and body and replace them
+		requestTemplate = self.templateReplaceVariables(requestFormat)
+		##Return the requestTemplate to be used in the requestThroughTor methods
+		return requestTemplate
+
+
+	##TODO: When we introduce more authentication methods we'll need to make this more extensive
+	def generateVariables(self, requestFormat):
+		for templateValue, type in requestFormat["variables"].items():
+			if type == "cg.username":
+				requestFormat["variables"][templateValue] = self.credentialGenerator.generateUsername()
+			elif type == "cg.password":
+				requestFormat["variables"][templateValue] = self.credentialGenerator.generatePassword()
+
+		return requestFormat
+
+	
+	def templateReplaceVariables(self, requestFormat):
+		##Here we loop over the URL, Headers, and Body and perform replacement on {defaultVal}
+		for key, value in requestFormat["variables"].items():
+			template = "{" + key + "}"
+			requestFormat["url"] = requestFormat["url"].replace(template, value)
+
+			for index in range(len(requestFormat["headers"])):
+				requestFormat["headers"][index] = requestFormat["headers"][index].replace(template, value)
+
+			##TODO: Once we allow http post requests, we will need a way to deal with that because
+			##there are numerous possible encodings that we would have to potentially deal with when performing
+			##replacement strings
+
+			##NOTE: The best way would most likely be to make the body into a string and perform replacement that way
+
+		return requestFormat
+
+
+	##TODO: Provide more options with the request, instead of just URL
+	def getHTTPResourceThroughTor(self, encodedURL, customHTTPHeaders=[]):
+		output = io.BytesIO()
+		self.curlHandle.setopt(pycurl.URL, encodedURL)
+		self.curlHandle.setopt(pycurl.HTTPHEADER, customHTTPHeaders)
+		self.curlHandle.setopt(pycurl.FOLLOWLOCATION, True)
+		self.curlHandle.setopt(pycurl.WRITEDATA, output)
+		self.curlHandle.perform()
+		return output.getvalue()
 
 
 	def retrieveExitNodes(self):
@@ -111,14 +173,9 @@ class baitConnector:
 			self.controller.set_conf("ExitNodes", fingerprint)
 		except Exception as e:
 			print(e)
-			return
+			return None
 
-		##Now generate the bait credentials here
-		# username, password = credentialGenerator.generateCreds()
-
-		##Now we format the username and password into the crafted http request
-		##The crafted http request needs to have some variablility to it, so that it is harder to identify
-		# httpRequest = self.formBaitHTTPRequest(username, password)
+		httpTemplateRequest = self.craftHTTPTemplateRequest()
 		
 		##The request crafting is dependent on the service that hides behind the proxy. We'll generate it in a compatible method
 		##Therefore we require the user who decides on the service to create a json configuration file
@@ -126,19 +183,30 @@ class baitConnector:
 		##NOTE: Pycurl is using a cached version of the results, so we will initate the pycurl handle for every connection just to be sage
 		##NOTE: FRESH_CONNECT is an option in libcurl that might help us
 		self._initiatePycurlHandle()
+
+		encodedURL = httpTemplateRequest["url"]
+		headers = httpTemplateRequest["headers"]
+		print(encodedURL)
+		print(headers)
+		print("\n\n")
+		# body = httpTemplateRequest["body"]
+
 		try:
-			result = self.requestHTTPThroughTor("http://icanhazip.com")
+			##TODO: Allow for more requests than just get and post
+			result = self.getHTTPResourceThroughTor(encodedURL, customHTTPHeaders=headers)
 		except Exception:
-			return
+			return None
 
 		## Since the connection was succesful, we now store it in our data structure
-		self.storeExitNodeBaitCreds(fingerprint, username, password)
+		self.logExitNodeConnection(fingerprint, httpTemplateRequest["variables"])
 
 
 	##NOTE: Currently we are storing our bait requests in memory
 	##TODO: However, we want to end up storing this in a database 
-	def storeExitNodeBaitCreds(self, fingerprint, username, password):
-		baitConnection = [username, password, datetime.datetime()]
+	def logExitNodeConnection(self, fingerprint, variables):
+		##Here we sift through the variables that are used for authentication
+		##TODO: This will be a more extensive function once we allow for other forms of http authentication
+		baitConnection = (variables["username"], variables["password"], datetime.now())
 		if self.baitConnections.get(fingerprint) == None:
 			self.baitConnections[fingerprint] = [baitConnection]
 		else:
@@ -146,22 +214,15 @@ class baitConnector:
 
 
 		
-
-
-
 	def runBaitConnector(self):
 		##NOTE: Is there a reason to store all scans for exit nodes
 		##First we get the exit nodes fingerprints
 		while self.shutdownEvent.is_set() == False:
 			self.retrieveExitNodes()
-
 			for exitNodeFingerprint in self.exitNodes:
 				self.testExitNode(exitNodeFingerprint)
-
-				time.sleep(5)
+				time.sleep(self.sleepTime)
 		
-
-
 
 		##We then loop through each fingerprint (waiting a set period to avoid overloading the network)
 		
