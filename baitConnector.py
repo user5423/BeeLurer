@@ -21,36 +21,11 @@ from credentialGenerator import credentialGenerator as cg
 ##We need a way to allow the user to show how to create the request
 
 
-class baitConnector:
-	def __init__(self, torrcConfig=None):
+class torSessionManager:
+	def __init__(self, torrcConfig):
 		self._setTorrcConfiguration(torrcConfig)
 		self._initiateTorProcess()
 		self._initiateTorController()
-
-		self._initiatePycurlHandle()
-		self._initateCredentialGenerator()
-
-		self.sleepTime = 5
-		##This Datastructure will use fingerprint: { datetime: (username, password)}
-		self.baitConnections = {}
-		self.shutdownEvent = threading.Event()
-
-		##TODO: Consider allowing multiple request formats after MVP developed
-		self.loadRequestFormat()
-
-
-	def _initateCredentialGenerator(self):
-		self.credentialGenerator = credentialGenerator()
-
-
-	def _initiatePycurlHandle(self):
-		self.curlHandle = pycurl.Curl()
-		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
-		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
-		##TODO: Tor may be listening on a different port --> Remove hardcoded values
-		self.curlHandle.setopt(pycurl.PROXYPORT, 9050) 
-		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
-		
 
 	def _setTorrcConfiguration(self, config):
 		##TODO: Consider adding error checking for Torrc config arguments
@@ -82,11 +57,63 @@ class baitConnector:
 			print(e)
 
 
+	def _initiatePycurlHandle(self):
+		self.curlHandle = pycurl.Curl()
+		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
+		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
+		##TODO: Tor may be listening on a different port --> Remove hardcoded values
+		self.curlHandle.setopt(pycurl.PROXYPORT, 9050) 
+		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
+
+
+	def retrieveExitNodes(self):
+		exit_digests = set()
+		exit_fingerprints = set()
+		data_dir = self.controller.get_conf('DataDirectory')
+
+		for desc in self.controller.get_microdescriptors():
+			if desc.exit_policy.is_exiting_allowed():
+				exit_digests.add(desc.digest(encoding='HEX'))
+
+		for desc in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
+			if desc.digest in exit_digests:
+				exit_fingerprints.add(desc.fingerprint)
+
+		##With the exit nodes we want to associate a datetime
+
+		##The structure wants to take into account previous retrievals
+		self.exitNodes = exit_fingerprints
+
+
+	def changeExitNode(self, fingerprint):
+		try:
+			self.controller.set_conf("ExitNodes", fingerprint)
+			print(fingerprint)
+		except Exception as e:
+			print(e)
+			return None
+
 	def shutdownTorProcess(self):
 		self.tor_process.kill()
 
 	def shutdownTorController(self):
 		self.controller.close()
+
+
+class baitConnector(torSessionManager, credentialGenerator):
+	def __init__(self, torrcConfig=None):
+		torSessionManager.__init__(self, torrcConfig)
+		credentialGenerator.__init__(self)
+
+		self._initiatePycurlHandle()
+
+		self.sleepTime = 5
+		##This Datastructure will use fingerprint: { datetime: (username, password)}
+		self.baitConnections = {}
+		self.shutdownEvent = threading.Event()
+
+		##TODO: Consider allowing multiple request formats after MVP developed
+		self.loadRequestFormat()
 
 
 	def loadRequestFormat(self):
@@ -110,9 +137,9 @@ class baitConnector:
 	def generateVariables(self, requestFormat):
 		for templateValue, type in requestFormat["variables"].items():
 			if type == "cg.username":
-				requestFormat["variables"][templateValue] = self.credentialGenerator.generateUsername()
+				requestFormat["variables"][templateValue] = self.generateUsername()
 			elif type == "cg.password":
-				requestFormat["variables"][templateValue] = self.credentialGenerator.generatePassword()
+				requestFormat["variables"][templateValue] = self.generatePassword()
 
 		return requestFormat
 
@@ -121,8 +148,7 @@ class baitConnector:
 		##Here we loop over the URL, Headers, and Body and perform replacement on {defaultVal}
 		for key, value in requestFormat["variables"].items():
 			template = "{" + key + "}"
-			requestFormat["url"].replace(template, value)
-
+			requestFormat["url"] = requestFormat["url"].replace(template, value)
 			for index in range(len(requestFormat["headers"])):
 				requestFormat["headers"][index] = requestFormat["headers"][index].replace(template, value)
 
@@ -146,41 +172,19 @@ class baitConnector:
 		return output.getvalue()
 
 
-	def retrieveExitNodes(self):
-		exit_digests = set()
-		exit_fingerprints = set()
-		data_dir = self.controller.get_conf('DataDirectory')
-
-		for desc in self.controller.get_microdescriptors():
-			if desc.exit_policy.is_exiting_allowed():
-				exit_digests.add(desc.digest(encoding='HEX'))
-
-		for desc in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
-			if desc.digest in exit_digests:
-				exit_fingerprints.add(desc.fingerprint)
-
-		##With the exit nodes we want to associate a datetime
-
-		##The structure wants to take into account previous retrievals
-		self.exitNodes = exit_fingerprints
 
 
 	def testExitNode(self, fingerprint):
 		##First we need to reload tor with the new torrc that has the exit node we want
 		##TODO: It's possible that a fingerprint we had no longer exists, so we need proper exception handling here
-		try:
-			print(fingerprint)
-			self.controller.set_conf("ExitNodes", fingerprint)
-		except Exception as e:
-			print(e)
-			return None
+		self.changeExitNode(fingerprint)
 
 		httpTemplateRequest = self.craftHTTPTemplateRequest()
 		
 		##The request crafting is dependent on the service that hides behind the proxy. We'll generate it in a compatible method
 		##Therefore we require the user who decides on the service to create a json configuration file
 
-		##NOTE: Pycurl is using a cached version of the results, so we will initate the pycurl handle for every connection just to be sage
+		##NOTE: Pycurl is using a cached version of the results, so we will initate the pycurl handle for every connection just to be safe
 		##NOTE: FRESH_CONNECT is an option in libcurl that might help us
 		self._initiatePycurlHandle()
 
@@ -209,7 +213,6 @@ class baitConnector:
 		else:
 			self.baitConnections[fingerprint].append(baitConnection)
 
-
 		
 	def runBaitConnector(self):
 		##NOTE: Is there a reason to store all scans for exit nodes
@@ -220,15 +223,9 @@ class baitConnector:
 				self.testExitNode(exitNodeFingerprint)
 				time.sleep(self.sleepTime)
 		
-
 		##We then loop through each fingerprint (waiting a set period to avoid overloading the network)
-		
 		##we create a circuit with that exit node as our network
-
 		##We then send the bait connection over via the tor port
-
-		return
-
 
 
 def main():
