@@ -27,20 +27,26 @@ class credentialGenerator:
     def __init__(self):
         self.credentialsUsed = []
 
-    def generateUsername(self, minLength=5, maxLength=13):
+
+    def generateUsername(self):
+        try:
+            return next(self.usernameGenerator)
+        except Exception:
+            self.usernameGenerator = self.getUsernameFromFile()
+            print("started again")
+            return next(self.usernameGenerator)
+
+    def getUsernameFromFile(self, minLength=5, maxLength=13):
         with open("wordlists/jeanphorn-wordlist-usernames.txt") as infile:
-            ##TODO: This is a quick mehtod, but is computationally inefficient
-            for i in range(random.randint(1, 10000)):
-                username = infile.readline()
-
-            ##TODO: THis will have more extensive options to get usernames that look more realistic
-            ##NOTE: -1 is for the \n at the end of the string
             while True:
-                if minLength <= len(username)-1 <= maxLength:
-                    break
-                username = infile.readline()           
+                username = self.jumpForwardInFile(infile)
+                if minLength <= len(username) <= maxLength and username not in self.credentialsUsed:
+                    yield username                
 
-        return username.strip("\n")
+    def jumpForwardInFile(self, fd, lines=random.randint(170, 250)):
+        for i in range(lines):
+            username = fd.readline().strip("\n")
+        return username
 
     def generatePassword(self, minLength=8, maxLength=12):
         return secrets.token_urlsafe(random.randint(minLength, maxLength))
@@ -62,7 +68,5 @@ class password:
     pass
 
 ## Once we have generated user credentials we use stem to send them to the tor network
-
 if __name__ == "__main__":
     cg = credentialGenerator()
-    print(cg.generateCredentials())
