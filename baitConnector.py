@@ -1,10 +1,11 @@
-from re import template
 from stem.control import Controller
 from stem.descriptor import parse_file
 import stem.process
+from datetime import datetime
+from re import template
+
 import pprint
 import os
-import datetime
 import threading
 import time
 import pycurl
@@ -231,6 +232,9 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 		encodedURL = httpTemplateRequest["url"]
 		headers = httpTemplateRequest["headers"]
+		print(encodedURL)
+		print(headers)
+		print("\n\n")
 		# body = httpTemplateRequest["body"]
 
 		try:
@@ -248,7 +252,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 	def logExitNodeConnection(self, fingerprint, variables):
 		##Here we sift through the variables that are used for authentication
 		##TODO: This will be a more extensive function once we allow for other forms of http authentication
-		baitConnection = (variables["username"], variables["password"], datetime.datetime())
+		baitConnection = (variables["username"], variables["password"], datetime.now())
 		if self.baitConnections.get(fingerprint) == None:
 			self.baitConnections[fingerprint] = [baitConnection]
 		else:

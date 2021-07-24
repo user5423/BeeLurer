@@ -27,6 +27,7 @@ class credentialGenerator:
     def __init__(self):
         self.credentialsUsed = []
 
+
     def generateUsername(self):
         try:
             return next(self.usernameGenerator)
