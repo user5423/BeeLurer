@@ -1,22 +1,25 @@
+from codecs import encode
+from functools import lru_cache
 import random
+from re import template
+from datetime import datetime, timedelta
+
+
+import stem.process
 from stem.control import Controller
 from stem.descriptor import parse_file
-import stem.process
-from datetime import datetime
-from re import template
 
-import pprint
+
 import os
 import threading
-import time
 import pycurl
 import certifi
 import io
-import colorama
 import json
 import copy
 from credentialGenerator import credentialGenerator
 from credentialGenerator import credentialGenerator as cg
+
 
 
 from typing import Any, Dict, List, Mapping, Optional, Sequence
@@ -88,23 +91,21 @@ class torSessionManager:
 	def _initiateTorProcess(self, config: Optional[Dict[str, Any]] = None) -> None:
 		self._setTorrcConfiguration(config)
 		self.tor_process = stem.process.launch_tor_with_config(self.config)
-		print("tor process created")
+		print("Tor process created")
 
 
 	def _initiateTorController(self, port: int = 9051) -> None:
 		self.controller = Controller.from_port(port=port)
-		try:
-			self.controller.set_caching(False)
-			self.controller.authenticate()
-			print("tor controller created")
-		except Exception as e:
-			print(e)
+		self.controller.set_caching(False)
+		self.controller.authenticate()
+		print("Tor controller created")
 
 
 	def _initiatePycurlHandle(self) -> None:
 		self.curlHandle = pycurl.Curl()
 		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
-		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
+		self.curlHandle.setopt(pycurl.PROXY, '127.0.0.1')
+		self.curlHandle.setopt(pycurl.TIMEOUT, 10)
 		##TODO: Tor may be listening on a different port --> Remove hardcoded values
 		self.curlHandle.setopt(pycurl.PROXYPORT, 9050) 
 		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
@@ -124,19 +125,12 @@ class torSessionManager:
 				exit_fingerprints.add(desc.fingerprint)
 
 		##With the exit nodes we want to associate a datetime
-
 		##The structure wants to take into account previous retrievals
 		self.exitNodes = exit_fingerprints
 
 
 	def changeExitNode(self, fingerprint: str) -> None:
-		try:
-			self.controller.set_conf("ExitNodes", fingerprint)
-			print(fingerprint)
-		except Exception as e:
-			print(e)
-			return None
-
+		self.controller.set_conf("ExitNodes", fingerprint)
 		##BUG: Pycurl is using a cached version of the results, so we will initate the pycurl handle for every connection just to be safe
 		##NOTE: However, pycurl by default shouldn't be returning cached results. This might be a bug todo with stem returning cached results
 		##NOTE: FRESH_CONNECT is an option in libcurl that might help us
@@ -168,12 +162,20 @@ class baitConnector(torSessionManager, credentialGenerator):
 		self.shutdownEvent = threading.Event()
 
 		self.requestFormat = self.loadRequestFormat()
+		
+		self.ipaddress = self.getPublicIPaddress()
+		self.ipaddressExp = datetime.now() + timedelta(hours=1)
+
+	
+	@property
+	def hostPublicIPAddress(self):
+		if datetime.now() > self.ipaddressExp:
+			self.ipaddress = self.getPublicIPaddress()
+		return self.ipaddress
 
 
-	##TODO-F: Support multiple request types after MVP developed
 	def loadRequestFormat(self) -> None:
-		with open("requestFormat.json") as fp:
-			return json.load(fp)
+		with open("requestFormat.json") as fp: return json.load(fp)
 
 
 	def craftHTTPTemplateRequest(self) -> Mapping[str, str]:
@@ -181,6 +183,8 @@ class baitConnector(torSessionManager, credentialGenerator):
 		requestFormat = copy.deepcopy(self.requestFormat)
 		##We first start by generating the values for the variables
 		requestFormat = self.generateCredentials(requestFormat)
+		##Then we generate the remaining values for the variables
+		requestFormat = self.generateVariables(requestFormat)
 		##Then we find the variable in the template for url, headers, and body and replace them
 		requestTemplate = self.templateReplaceVariables(requestFormat)
 		##Return the requestTemplate to be used in the requestThroughTor methods
@@ -197,6 +201,22 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 		return requestFormat
 
+	def generateVariables(self, requestFormat):
+		for templateValue, type in requestFormat["variables"].items():
+			if templateValue == "host" and type == "self":
+				requestFormat["variables"][templateValue] = self.getPublicIPaddress()
+
+		print(requestFormat)
+		return requestFormat
+
+
+	def getPublicIPaddress(self):
+		output = io.BytesIO()
+		curlHandle = pycurl.Curl()
+		curlHandle.setopt(pycurl.URL, "http://icanhazip.com/")
+		curlHandle.setopt(pycurl.WRITEDATA, output)
+		curlHandle.perform()
+		return output.getvalue().decode("iso-8859-1").strip("\n")
 
 	## TODO: Change from default strings to customizable strings, otherwise its too easy to be blacklisted by user-string
 	## The selection of values for headers in the future will be decided based on a selected "profile" for the baitConnector host.
@@ -237,7 +257,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 	##NOTE: The best way would most likely be to make the body into a string and perform replacement that way
 	def templateReplaceVariables(self, requestFormat):
 		##Here we loop over the URL, Headers, and Body and perform replacement on {defaultVal}
-		for key, value in (requestFormat["variables"]).items():
+		for key, value in requestFormat.get("variables", []).items():
 			template = "{" + key + "}"
 			requestFormat["url"] = requestFormat["url"].replace(template, value)
 			for index in range(len(requestFormat["headers"])):
@@ -250,6 +270,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 	def httpgetResourceViaTor(self, encodedURL: str, customHTTPHeaders: List = []) -> bytes:
 		output = io.BytesIO()
 		self.curlHandle.setopt(pycurl.URL, encodedURL)
+		self.curlHandle.setopt(pycurl.PORT, 8080)
 		self.curlHandle.setopt(pycurl.HTTPHEADER, customHTTPHeaders)
 		self.curlHandle.setopt(pycurl.FOLLOWLOCATION, True)
 		self.curlHandle.setopt(pycurl.WRITEDATA, output)
@@ -265,14 +286,16 @@ class baitConnector(torSessionManager, credentialGenerator):
 		##Therefore we require the user who decides on the service to create a json configuration file
 		httpTemplateRequest = self.craftHTTPTemplateRequest()
 		httpTemplateRequest["headers"] = self.generateDefaultHeaders()
-
 		encodedURL = httpTemplateRequest["url"]
 		headers = httpTemplateRequest["headers"]
+		print(f"URL: {encodedURL}")
 
 		try:
 			##TODO: Allow for more requests than just get and post
-			self.httpgetResourceViaTor(encodedURL, customHTTPHeaders=headers)
-		except pycurl.error:
+			val = self.httpgetResourceViaTor(encodedURL, customHTTPHeaders=headers)
+			print(val)
+		except pycurl.error as e:
+			print(f"error: {e}")
 			return None
 
 		## Since the connection was succesful, we now store it in our data structure
