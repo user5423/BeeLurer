@@ -16,9 +16,13 @@ import io
 import colorama
 import json
 import copy
+
 from credentialGenerator import credentialGenerator
 from credentialGenerator import credentialGenerator as cg
 
+from clientExceptions import *
+
+import logger
 ## Firstly, we need a docker container that will handle all the communication between the client and the server
 ## This will include generating the unique credentials, updating a database, and alerting if credentials were used
 
@@ -84,15 +88,25 @@ class torSessionManager:
 
 
 	def _initiateTorProcess(self, config: Dict[str, str]) -> None:
-		self.tor_process = stem.process.launch_tor_with_config(config)
-		print("Tor process created")
+		try:
+			self.tor_process = stem.process.launch_tor_with_config(config)
+			print("Tor process created")
+			logging.info("Tor Process created")
+		except OSError as e:
+			logging.debug(f"TorProcessCreationException: {e}")
+			raise TorProcessCreationException
 
 
 	def _initiateTorController(self, port: int = 9051) -> None:
-		self.controller = Controller.from_port(port=port)
-		self.controller.set_caching(False)
-		self.controller.authenticate()
-		print("Tor controller created")
+		try:
+			self.controller = Controller.from_port(port=port)
+			self.controller.set_caching(False)
+			self.controller.authenticate()
+			print("Tor Controller connected")
+			logging.info("Tor Controller connected")
+		except stem.connection.AuthenticationFailure as e:
+			logging.debug(f"TorControllerCreationException: {e}")
+			raise TorControllerCreationException
 
 
 	def _initiatePycurlHandle(self) -> None:
@@ -105,11 +119,23 @@ class torSessionManager:
 
 	
 	def _shutdownTorProcess(self) -> None:
-		self.tor_process.kill()
+		try:
+			self.tor_process.kill()
+			print("Tor Process has been killed")
+			logging.info("Tor Process has been killed")
+		except OSError as e:
+			logging.debug(f"TorProcessShutdownException: {e}")
+			raise TorProcessKillException
 
 
 	def _shutdownTorController(self) -> None:
-		self.controller.close()
+		try:
+			self.controller.close()
+			print("Tor Controller has been closed")
+			logging.info("Tor Controller has been closed")
+		except Exception as e:
+			logging.debug(f"TorControllerShutdownException: {e}")
+			raise TorControllerShutdownException
 
 
 	def retrieveExitNodes(self) -> None:
@@ -133,7 +159,6 @@ class torSessionManager:
 
 	def changeExitNode(self, fingerprint: str) -> None:
 		self.controller.set_conf("ExitNodes", fingerprint)
-
 
 	def shutdown(self) -> None:
 		self._shutdownTorProcess()
