@@ -4,6 +4,8 @@ import stem.process
 from datetime import datetime
 from re import template
 
+from typing import Dict, List, Optional
+
 import pprint
 import os
 import threading
@@ -57,17 +59,17 @@ from credentialGenerator import credentialGenerator as cg
 # The first solution provides seperation of the honeypot from the beelurer container, but port scanning might show other information
 # However, the second, would be a lot simpler to implemenent, but the first but be quite easy out of the box to configure
 
-
+configType = Dict[str, Union[str, List[str], Dict[str, str]]]
 
 ##TODO: Implement try and except argument with the custom errors used by stem
 ##We need a way to allow the user to show how to create the request
 class torSessionManager:
-	def __init__(self, torrcConfig):
+	def __init__(self, torrcConfig: Dict[str, str]) -> None:
 		self._setTorrcConfiguration(torrcConfig)
 		self._initiateTorProcess()
 		self._initiateTorController()
 
-	def _setTorrcConfiguration(self, config):
+	def _setTorrcConfiguration(self, config: Optional[Dict[str, str]] = None) -> None:
 		##TODO: Consider adding error checking for Torrc config arguments
 		defaultConfig = {
 			'ControlPort' : '9051',
@@ -81,20 +83,19 @@ class torSessionManager:
 		self.config = config if config != None else defaultConfig
 
 
-	def _initiateTorProcess(self, config=None):
-		config = config if config != None else self.config
+	def _initiateTorProcess(self, config: Dict[str, str]) -> None:
 		self.tor_process = stem.process.launch_tor_with_config(config)
-		print("tor process created")
+		print("Tor process created")
 
 
-	def _initiateTorController(self, port=9051):
+	def _initiateTorController(self, port: int = 9051) -> None:
 		self.controller = Controller.from_port(port=port)
 		self.controller.set_caching(False)
 		self.controller.authenticate()
-		print("tor controller created")
+		print("Tor controller created")
 
 
-	def _initiatePycurlHandle(self):
+	def _initiatePycurlHandle(self) -> None:
 		self.curlHandle = pycurl.Curl()
 		self.curlHandle.setopt(self.curlHandle.CAINFO, certifi.where())
 		self.curlHandle.setopt(pycurl.PROXY, 'localhost')
@@ -103,7 +104,7 @@ class torSessionManager:
 		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
 
 
-	def retrieveExitNodes(self):
+	def retrieveExitNodes(self) -> None:
 		exit_digests = set()
 		exit_fingerprints = set()
 		data_dir = self.controller.get_conf('DataDirectory')
@@ -122,21 +123,21 @@ class torSessionManager:
 		self.exitNodes = exit_fingerprints
 
 
-	def changeExitNode(self, fingerprint):
+	def changeExitNode(self, fingerprint: str) -> None:
 		self.controller.set_conf("ExitNodes", fingerprint)
 
 
-	def shutdownTorProcess(self):
+	def shutdownTorProcess(self) -> None:
 		self.tor_process.kill()
 
 
-	def shutdownTorController(self):
+	def shutdownTorController(self) -> None:
 		self.controller.close()
 
 
 
 class baitConnector(torSessionManager, credentialGenerator):
-	def __init__(self, torrcConfig=None):
+	def __init__(self, torrcConfig: Optional[configType] = None) -> None:
 		torSessionManager.__init__(self, torrcConfig)
 		credentialGenerator.__init__(self)
 
@@ -151,12 +152,12 @@ class baitConnector(torSessionManager, credentialGenerator):
 		self.loadRequestFormat()
 
 
-	def loadRequestFormat(self):
+	def loadRequestFormat(self) -> None:
 		with open("requestFormat.json") as fp:
 			self.requestFormat = json.load(fp)
 
 
-	def craftHTTPTemplateRequest(self):
+	def craftHTTPTemplateRequest(self) -> Dict[str, str]:
 		##First we need the reqFormat loaded into a variable in the object
 		requestFormat = copy.deepcopy(self.requestFormat)
 		##We first start by generating the values for the variables
@@ -168,7 +169,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 
 	##TODO: When we introduce more authentication methods we'll need to make this more extensive
-	def generateVariables(self, requestFormat):
+	def generateVariables(self, requestFormat: configType) -> configType:
 		for templateValue, type in requestFormat["variables"].items():
 			if type == "cg.username":
 				requestFormat["variables"][templateValue] = self.generateUsername()
@@ -178,7 +179,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 		return requestFormat
 
 	
-	def templateReplaceVariables(self, requestFormat):
+	def templateReplaceVariables(self, requestFormat: configType) -> configType:
 		##Here we loop over the URL, Headers, and Body and perform replacement on {defaultVal}
 		for key, value in requestFormat["variables"].items():
 			template = "{" + key + "}"
@@ -196,7 +197,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 
 	##TODO: Provide more options with the request, instead of just URL
-	def getHTTPResourceThroughTor(self, encodedURL, customHTTPHeaders=[]):
+	def getHTTPResourceThroughTor(self, encodedURL: str, customHTTPHeaders: List[str] = []) -> bytes:
 		output = io.BytesIO()
 		self.curlHandle.setopt(pycurl.URL, encodedURL)
 		self.curlHandle.setopt(pycurl.HTTPHEADER, customHTTPHeaders)
@@ -207,8 +208,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 
 
-
-	def testExitNode(self, fingerprint):
+	def testExitNode(self, fingerprint: str) -> None:
 		##First we need to reload tor with the new torrc that has the exit node we want
 		##TODO: It's possible that a fingerprint we had no longer exists, so we need proper exception handling here
 		self.changeExitNode(fingerprint)
@@ -233,7 +233,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 	##NOTE: Currently we are storing our bait requests in memory
 	##TODO: However, we want to end up storing this in a database 
-	def logExitNodeConnection(self, fingerprint, variables):
+	def logExitNodeConnection(self, fingerprint: str, variables: Dict[str, Union[str, int]]) -> None:
 		##Here we sift through the variables that are used for authentication
 		##TODO: This will be a more extensive function once we allow for other forms of http authentication
 		baitConnection = (variables["username"], variables["password"], datetime.now())
@@ -243,7 +243,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 			self.baitConnections[fingerprint].append(baitConnection)
 
 		
-	def runBaitConnector(self):
+	def runBaitConnector(self) -> None:
 		##NOTE: Is there a reason to store all scans for exit nodes
 		##First we get the exit nodes fingerprints
 		while self.shutdownEvent.is_set() == False:
@@ -257,7 +257,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 		##We then send the bait connection over via the tor port
 
 
-def main():
+def main() -> None:
 	bc = baitConnector()
 	# print(len(bc.retrieveExitNodes()))
 	bc.runBaitConnector()
