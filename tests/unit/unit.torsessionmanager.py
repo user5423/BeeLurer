@@ -75,3 +75,35 @@ class testTorSessionManager:
         self.TMS = torSessionManager(config)
 
 
+    ## These unittests should test:
+    ## 1. torSessionManager._initiateTorController(self):
+
+    def test_init_TorControlPortAlreadyListened(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_TorControlPortNotListened(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_TorControlFailedToAuthenticate(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+
+    ## These unittests should test all functions called by torSessionManager.__init__():
+    ## 1. torSessionManager._setTorrcConfiguration()
+    ## 2. torSessionManager._initiateTorProcess()
+    ## 3. torSessionManager._initiateTorController(self):
+
+    def test_init_defaultSuccess(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_customSuccess(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+
+
+
