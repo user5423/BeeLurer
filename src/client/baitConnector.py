@@ -103,6 +103,14 @@ class torSessionManager:
 		self.curlHandle.setopt(pycurl.PROXYPORT, 9050) 
 		self.curlHandle.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
 
+	
+	def _shutdownTorProcess(self) -> None:
+		self.tor_process.kill()
+
+
+	def _shutdownTorController(self) -> None:
+		self.controller.close()
+
 
 	def retrieveExitNodes(self) -> None:
 		exit_digests = set()
@@ -127,13 +135,9 @@ class torSessionManager:
 		self.controller.set_conf("ExitNodes", fingerprint)
 
 
-	def shutdownTorProcess(self) -> None:
-		self.tor_process.kill()
-
-
-	def shutdownTorController(self) -> None:
-		self.controller.close()
-
+	def shutdown(self) -> None:
+		self._shutdownTorProcess()
+		self._shutdownTorController()
 
 
 class baitConnector(torSessionManager, credentialGenerator):
@@ -170,12 +174,11 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 	##TODO: When we introduce more authentication methods we'll need to make this more extensive
 	def generateVariables(self, requestFormat: configType) -> configType:
-		for templateValue, type in requestFormat["variables"].items():
-			if type == "cg.username":
+		for templateValue, templateType in requestFormat["variables"].items():
+			if templateType == "cg.username":
 				requestFormat["variables"][templateValue] = self.generateUsername()
-			elif type == "cg.password":
+			elif templateType == "cg.password":
 				requestFormat["variables"][templateValue] = self.generatePassword()
-
 		return requestFormat
 
 	
@@ -243,7 +246,7 @@ class baitConnector(torSessionManager, credentialGenerator):
 			self.baitConnections[fingerprint].append(baitConnection)
 
 		
-	def runBaitConnector(self) -> None:
+	def run(self) -> None:
 		##NOTE: Is there a reason to store all scans for exit nodes
 		##First we get the exit nodes fingerprints
 		while self.shutdownEvent.is_set() == False:
@@ -259,10 +262,8 @@ class baitConnector(torSessionManager, credentialGenerator):
 
 def main() -> None:
 	bc = baitConnector()
-	# print(len(bc.retrieveExitNodes()))
-	bc.runBaitConnector()
-	bc.shutdownTorController()
-	bc.shutdownTorProcess()
+	bc.run()
+	bc.shutdown()
 
 if __name__ == "__main__":
 	main()
