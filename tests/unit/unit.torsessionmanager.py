@@ -10,7 +10,7 @@ class testTorSessionManager:
     ## These unittests should test: 
     ## 1. torSessionManager._setTorrcConfiguration()
     ## 2. torSessionManager._initiateTorProcess()
-    
+
     def test_init_Default(self):
         self.TSM = torSessionManager()
 
@@ -51,8 +51,27 @@ class testTorSessionManager:
         self.TMS = torSessionManager(config)
 
 
-    
+    ## These unittests should test
+    ## 1. torSessionManager._initiateTorProccess()
 
+    def test_init_ProcessAlreadyListeningOnPort(self):
+        config = None
+        self.TMS = torSessionManager(config)
 
-    ## We want to test
+    def test_init_TorNotInstalled(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_TorProcessFailedToStartup(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_torSessionManagerObjectKilled(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
+    def test_init_torSessionManagerProcessKilled(self):
+        config = None
+        self.TMS = torSessionManager(config)
+
 
