@@ -21,8 +21,8 @@ from credentialGenerator import credentialGenerator
 from credentialGenerator import credentialGenerator as cg
 
 from clientExceptions import *
-
-import logger
+from typing import *
+import logging
 ## Firstly, we need a docker container that will handle all the communication between the client and the server
 ## This will include generating the unique credentials, updating a database, and alerting if credentials were used
 
@@ -62,9 +62,9 @@ import logger
 
 # The first solution provides seperation of the honeypot from the beelurer container, but port scanning might show other information
 # However, the second, would be a lot simpler to implemenent, but the first but be quite easy out of the box to configure
+logging.basicConfig(filename='client.log', encoding='utf-8', level=logging.DEBUG)
 
 configType = Dict[str, Union[str, List[str], Dict[str, str]]]
-
 ##TODO: Implement try and except argument with the custom errors used by stem
 ##We need a way to allow the user to show how to create the request
 class torSessionManager:
@@ -87,10 +87,11 @@ class torSessionManager:
 		self.config = config if config != None else defaultConfig
 
 
-	def _initiateTorProcess(self, config: Dict[str, str]) -> None:
+	def _initiateTorProcess(self) -> None:
 		try:
-			self.tor_process = stem.process.launch_tor_with_config(config)
-			print("Tor process created")
+			print("Creating Tor Process...")
+			self.tor_process = stem.process.launch_tor_with_config(self.config)
+			print("Tor Process created\n")
 			logging.info("Tor Process created")
 		except OSError as e:
 			logging.debug(f"TorProcessCreationException: {e}")
@@ -99,10 +100,11 @@ class torSessionManager:
 
 	def _initiateTorController(self, port: int = 9051) -> None:
 		try:
+			print("Creating Tor Controller...")
 			self.controller = Controller.from_port(port=port)
 			self.controller.set_caching(False)
 			self.controller.authenticate()
-			print("Tor Controller connected")
+			print("Tor Controller connected\n")
 			logging.info("Tor Controller connected")
 		except stem.connection.AuthenticationFailure as e:
 			logging.debug(f"TorControllerCreationException: {e}")
