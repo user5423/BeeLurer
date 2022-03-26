@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict, Any, List
 
 @dataclass
 class httpHeaders:
@@ -19,3 +20,12 @@ class httpHeaders:
     def generateHeaderList(self) -> List[str]:
         return [": ".join(header) for header in self._headers]
 
+
+@dataclass
+class httpBody:
+    _body: Any = field(init=False)
+    _contentType: str = field(init=False)
+
+    def setBody(self, body: Any, contentType: str):
+        self._body = body
+        self._content = contentType
