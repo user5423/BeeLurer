@@ -1,5 +1,8 @@
-from dataclasses import dataclass, field
+import yarl
+import validators
+
 from typing import Dict, Any, List
+from dataclasses import dataclass, field
 
 @dataclass
 class httpHeaders:
@@ -29,6 +32,17 @@ class httpBody:
     def setBody(self, body: Any, contentType: str):
         self._body = body
         self._content = contentType
+
+@dataclass
+class url:
+    _url: yarl.URL = field(init=False)
+
+    def setUrl(self, url: str):
+        ## We need to encode and then validate, then create a yarl
+        if validators.url(url):
+            self._url = yarl.URL(url)
+        else:
+            raise InvalidUrlValue
 
 
 @dataclass
