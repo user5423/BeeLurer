@@ -73,9 +73,9 @@ class url:
 class httpRequest:
     url: str
     method: str = field(default="GET")
-    headers: dict = field(default_factory=dict)
+    headers: dict[str,str] = field(default_factory=dict)
     body: Any = field(default_factory=dict)
-    query: dict = field(default_factory=dict)
+    query: dict[str,str] = field(default_factory=dict)
     _contentType: str = field(default='application/json')
     _supportedMethods: ClassVar[Set[str]] = {"GET", "POST", "PUT", "DELETE", "PATCH", "UPDATE", "HEAD", "CONNECT", "TRACE", "OPTIONS"}
 
@@ -104,3 +104,25 @@ class httpRequest:
     def createQuery(self, query: Dict[str, str]) -> None:
         self.query = httpQuery().setQuery(query)
 
+
+    ## NOTE: After the http request has been fully set, we need to be able to generate
+    ## a datastructure to return values
+    def getMethod(self):
+        return self.method
+
+    ## TODO: This needs to be significantly more robust
+    def getUrl(self):
+        ## THis needs to get the url from YARL object and the parameters in Query
+        querystring = ""
+        for k,v in self.query.items():
+            querystring += f"{k}={v}"
+        return requests.utils.quote(f"{self.url}?{querystring}")
+
+    def getBody(self):
+        return self.body
+
+    def getHeaders(self):
+        headers = []
+        for k,v in self.headers.items():
+            headers.append(f"{k}: {v}")
+        return headers
