@@ -1,8 +1,22 @@
 import yarl
 import validators
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, ClassVar, Set
 from dataclasses import dataclass, field
+
+
+class InvalidHeaderFormat(Exception):
+    def __init__(self):
+        super().__init__("Invalid Header Format provided (i.e. no : seperator)")
+
+class UnsupportedHttpMethod(Exception):
+    def __init__(self):
+        super().__init__("Unsupported HTTP Method")  
+
+class InvalidUrlValue(Exception):
+    def __init__(self):
+        super().__init__("Invalid URL Value")  
+
 
 @dataclass
 class httpHeaders:
