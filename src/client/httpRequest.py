@@ -81,7 +81,7 @@ class httpRequest:
             self.method = method
 
     def createUrl(self, url: str) -> None:
-        self.url = yarl.URL(url)
+        self.url = url().setUrl(url)
 
     def createBody(self, data: Any, contentType: str) -> None:
         self.body = httpBody().setBody(body, contentType)
