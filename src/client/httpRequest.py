@@ -1,6 +1,6 @@
 import yarl
 import validators
-
+import requests.utils.quote
 from typing import Dict, Any, List, ClassVar, Set
 from dataclasses import dataclass, field
 
@@ -43,9 +43,19 @@ class httpBody:
     _body: Any = field(init=False)
     _contentType: str = field(init=False)
 
-    def setBody(self, body: Any, contentType: str):
+    def setBody(self, body: Any, contentType: str) -> None:
         self._body = body
         self._content = contentType
+
+
+@dataclass
+class httpQuery:
+    _query: Any = field(init=False, default_factory=dict)
+
+    def setQueries(self, query: Dict[str, str]) -> None:
+        for k,v in query.items():
+            _query[k] = v
+    
 
 @dataclass
 class url:
@@ -65,6 +75,7 @@ class httpRequest:
     method: str = field(default="GET")
     headers: dict = field(default_factory=dict)
     body: Any = field(default_factory=dict)
+    query: dict = field(default_factory=dict)
     _contentType: str = field(default='application/json')
     _supportedMethods: ClassVar[Set[str]] = {"GET", "POST", "PUT", "DELETE", "PATCH", "UPDATE", "HEAD", "CONNECT", "TRACE", "OPTIONS"}
 
@@ -73,6 +84,7 @@ class httpRequest:
         self.headers = self.createHeaders(self.headers)
         self.body = self.createBody(self.body, self._contentType)
         self.headers.setHeaders({"content-type": self._contentType})
+        self.query = self.createQuery(self.query)
     
     def setHttpMethod(self, method: str) -> None:
         if method not in httpRequest._supportedMethods:
@@ -88,3 +100,7 @@ class httpRequest:
 
     def createHeaders(self, headers: Dict[str, str]) -> None:
         self.headers = httpHeaders().setHeaders(headers)
+
+    def createQuery(self, query: Dict[str, str]) -> None:
+        self.query = httpQuery().setQuery(query)
+
