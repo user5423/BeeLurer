@@ -1,0 +1,8 @@
+[FORMAT]
+indent-string=\t
+
+[MESSAGE]
+confidence=UNDEFINED
+disable=consider-using-enumerate,trailing-whitespace,trailing-newlines,missing-final-newline, unspecified-encoding
+
+
