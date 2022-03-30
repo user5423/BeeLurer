@@ -1,9 +1,9 @@
+import json
+from typing import Any, Dict
+
+import clientExceptions
 from httpRequest import httpRequest
 from authenticationGenerator import authenticationGenerator
-
-from dataclasses import dataclass, field
-from typing import Any, ClassVar, Set, Dict
-import json
 
 class httpRequestBuilder:
 	"""Provides methods to build http request based on defined formats"""
@@ -30,17 +30,16 @@ class httpRequestBuilder:
 		## Here we validate the arguments
 		templateVariableLen = len(httpRequestTemplate.get('variables', []))
 		if len(arguments) != templateVariableLen:
-			errorMsg = f"The arguments object was expected to have {templateVariableLen}, but only {len(arguments)} were received"
-			# raise IncorrectArgumentSizeException(errorMsg)
-			raise Exception(errorMsg)
+			errorMsg = f"The arguments object was expected to have \
+			{templateVariableLen}, but only {len(arguments)} were received"
+			raise clientExceptions.IncorrectArgumentSizeException(errorMsg)
 
 		for k,v in arguments.items():
 			if k in httpRequestTemplate['variables']:
 				httpRequestTemplate['variables'][k] = v
 			else:
-				# raise InvalidArgumentException()
 				errorMsg = f"The argument object should not have the '{k}' argument"
-				raise Exception(errorMsg)
+				raise clientExceptions.InvalidArgumentException(errorMsg)
 
 		return httpRequestTemplate
 
@@ -52,8 +51,8 @@ class httpRequestBuilder:
 		if "userpass" in httpRequestTemplate['authentication']:
 			httpRequestTemplate['authentication']['userpass'] = self.ag.generateUserPass()
 		else:
-			# raise AbsentAuthMethodException()
-			raise Exception()
+			errorMsg = "There is no userpass authentication method provided in the httpRequestTemplate"
+			raise clientExceptions.AbsentAuthMethodException(errorMsg)
 
 		return httpRequestTemplate
 
@@ -95,13 +94,13 @@ class httpRequestBuilder:
 						template[k] = template[k].replace(f"${{{parameter}}}", arguments[parameter])
 					else:
 						## We got a placeholder for which no argument was provided
-						# raise TemplateArgumentError()
-						errorMsg = ""
-						raise Exception(f"{k}: {v}")
+						errorMsg = f"The httpRequestTemplate has a parameter for the key {k}, \
+						where no argument was provided for it"
+						raise clientExceptions.TemplateArgumentError(errorMsg)
 				## otherwise, we should have a constant value, so we leave it alone
 				else: 
 					pass
-			
+				
 		return template
 
 	def _getPlaceholderIndices(self, string):
@@ -109,7 +108,7 @@ class httpRequestBuilder:
 		placeholders = []
 		bProtected = False
 		for index in range(len(string)):
-			if bProtected == False:
+			if bProtected is False:
 				if string[index] == '$' and string[index+1] == '{':
 					placeholders.append([index])
 					bProtected = True

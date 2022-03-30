@@ -37,4 +37,29 @@ class UnsupportedHttpMethod(Exception):
 class InvalidUrlValue(Exception):
 	def __init__(self):
 		super().__init__("Invalid URL Value")  
+
+
+
+#### These are HTTP Request Building related exceptions
+
+class InvalidArgumentException(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+		super().__init__(msg)
+
+class AbsentAuthMethodException(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+		super().__init__(msg)
+
+class IncorrectArgumentSizeException(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+		super().__init__(msg)
+
+class EmptyPlaceholderException(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+		super().__init__(msg)
+
 		
