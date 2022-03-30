@@ -1,9 +1,0 @@
-{   "method": "GET",
-    "url" : "https://{host}/something?user={username}&pass={password}",
-    "headers": [],
-    "body": null,
-    "variables": {"host": "self"},
-    "credentials": {"password" : "cg.password",
-                  "username" : "cg.username"}
-
-}
