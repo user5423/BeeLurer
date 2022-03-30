@@ -1,6 +1,6 @@
 import yarl
 import validators
-import requests.utils.quote
+import requests.utils
 from typing import Dict, Any, List, ClassVar, Set
 from dataclasses import dataclass, field
 
@@ -61,30 +61,32 @@ class httpQuery:
 class url:
     _url: yarl.URL = field(init=False)
 
-    def setUrl(self, url: str):
+    def setUrl(self, URL: str):
         ## We need to encode and then validate, then create a yarl
-        if validators.url(url):
-            self._url = yarl.URL(url)
+        print(URL)
+        if validators.url(URL):
+            self._url = yarl.URL(URL)
         else:
             raise InvalidUrlValue
 
 
 @dataclass
 class httpRequest:
-    url: str
+    url: str = field(default=None)
     method: str = field(default="GET")
     headers: dict[str,str] = field(default_factory=dict)
     body: Any = field(default_factory=dict)
     query: dict[str,str] = field(default_factory=dict)
-    _contentType: str = field(default='application/json')
-    _supportedMethods: ClassVar[Set[str]] = {"GET", "POST", "PUT", "DELETE", "PATCH", "UPDATE", "HEAD", "CONNECT", "TRACE", "OPTIONS"}
+    _contentType: str = field(init=False, default='application/json')
+    _supportedMethods: ClassVar[Set[str]] = field(init=False, default={"GET", "POST", "PUT", "DELETE", "PATCH", "UPDATE", "HEAD", "CONNECT", "TRACE", "OPTIONS"})
 
     def __post_init__(self):
-        self.url = self.createUrl(url)
-        self.headers = self.createHeaders(self.headers)
-        self.body = self.createBody(self.body, self._contentType)
+        self.createUrl(self.url)
+        self.createHeaders(self.headers)
+        self.createBody(self.body, self._contentType)
+        self.createQuery(self.query)
+
         self.headers.setHeaders({"content-type": self._contentType})
-        self.query = self.createQuery(self.query)
     
     def setHttpMethod(self, method: str) -> None:
         if method not in httpRequest._supportedMethods:
@@ -92,17 +94,21 @@ class httpRequest:
         else:
             self.method = method
 
-    def createUrl(self, url: str) -> None:
-        self.url = url().setUrl(url)
+    def createUrl(self, URL: str) -> None:
+        self.url = url()
+        self.url.setUrl(URL)
 
-    def createBody(self, data: Any, contentType: str) -> None:
-        self.body = httpBody().setBody(body, contentType)
+    def createBody(self, body: Any, contentType: str) -> None:
+        self.body = httpBody()
+        self.body.setBody(body, contentType)
 
     def createHeaders(self, headers: Dict[str, str]) -> None:
-        self.headers = httpHeaders().setHeaders(headers)
+        self.headers = httpHeaders()
+        self.headers.setHeaders(headers)
 
     def createQuery(self, query: Dict[str, str]) -> None:
-        self.query = httpQuery().setQuery(query)
+        self.query = httpQuery()
+        self.query.setQueries(query)
 
 
     ## NOTE: After the http request has been fully set, we need to be able to generate
