@@ -62,4 +62,17 @@ class EmptyPlaceholderException(Exception):
 		self.msg = msg
 		super().__init__(msg)
 
+
+#### These are Bait Connector related exceptions (higher-level ones that are caught and reraised)
+
+class TemplateFailureException(Exception):
+	def __init__(self) -> None:
+		self.msg = "The connection template has failed to be instantiated"
+		super().__init__(self.msg)
+
+class ConnectionFailureException(Exception):
+	def __init__(self) -> None:
+		self.msg = "The connection has been failed to be performed properly"
+		super().__init__(self.msg)
+
 		
