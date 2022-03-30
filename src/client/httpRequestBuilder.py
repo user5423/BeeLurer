@@ -22,7 +22,6 @@ class httpRequestBuilder:
 		## NOTE: Finally, we use the httpRequestTemplate arguments and auth to replace the other structures
 		httpRequestTemplate = self._templateReplace(httpRequestTemplate)
 		## Once the requestFormat has been filled properly, we can then build the httpRequest
-		print(httpRequestTemplate, end="\n\n\n")
 		return self._buildHttpRequest(httpRequestTemplate)
 
 
@@ -64,8 +63,8 @@ class httpRequestBuilder:
 
 	def _templateReplace(self, httpRequestTemplate: Dict[str, Any]) -> Dict[str, Any]:
 		arguments = {}
-		arguments.update(httpRequestTemplate.pop("variables"))
-		arguments.update(httpRequestTemplate["authentication"].pop("userpass"))
+		arguments.update(httpRequestTemplate["variables"])
+		arguments.update(httpRequestTemplate["authentication"]["userpass"])
 		## NOTE: Once we provide more sofisticated authentication methods, this will change
 		return self._iterateTemplateReplacement(httpRequestTemplate, arguments)
 
@@ -126,11 +125,13 @@ class httpRequestBuilder:
 
 	def _buildHttpRequest(self, httpRequestTemplate: Dict[str, Any]):
 		## TODO: Fix the url and query attribute redundancy
+		## TODO: Fix the header redundancy between auth object and auth variables that have replaced the url, headers, or body
 		return httpRequest(
 			url=httpRequestTemplate['url'],
 			body=httpRequestTemplate['body'],
 			method=httpRequestTemplate['method'],
 			headers=httpRequestTemplate['headers'],
+			auth=httpRequestTemplate['authorization']
 		)
 
 
