@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, ClassVar, Set
+from typing import Dict, Any, List, ClassVar, Set, Optional
 from dataclasses import dataclass, field
 import requests.utils
 
@@ -67,6 +67,7 @@ class httpRequest:
 	headers: dict[str,str] = field(default_factory=dict)
 	body: Any = field(default_factory=dict)
 	query: dict[str,str] = field(default_factory=dict)
+	auth: Optional[dict[str, Any]] = field(default=None)
 	_contentType: str = field(init=False, default='application/json')
 	_supportedMethods: ClassVar[Set[str]] = field(
 		init=False,
