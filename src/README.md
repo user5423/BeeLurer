@@ -1,4 +1,4 @@
-### BeeLurer Design Notes:
+### BeeLurer Old Design Notes (May be outdated):
 
 Firstly, we need a docker container that will handle all the communication between the client and the server. This will include generating the unique credentials, updating a database, and alerting if credentials were used
 
