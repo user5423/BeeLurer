@@ -1,11 +1,11 @@
 import sys
 import unittest
-sys.path.insert(0, './src/client/baitConnector.py')
+sys.path.insert(0, './src/client/')
 
-from baitConnector import torSessionManager
+from torSessionManager import torSessionManager
 
 
-class testTorSessionManager:
+class testTorSessionManager(unittest.TestSuite):
 
     ## These unittests should test: 
     ## 1. torSessionManager._setTorrcConfiguration()
