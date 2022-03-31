@@ -6,8 +6,8 @@ import io
 import pycurl
 # import certifi
 import clientExceptions
-from httpRequest import httpRequest
-from httpRequestBuilder import httpRequestBuilder
+
+from httpRequest import httpRequest, httpRequestBuilder
 from torSessionManager import torSessionManager
 
 configType = Dict[str, Union[str, List[str], Dict[str, str]]]
