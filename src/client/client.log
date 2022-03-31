@@ -1,0 +1,19 @@
+DEBUG:stem:System call: tor --version (runtime: 0.01)
+INFO:root:Tor Process created
+DEBUG:stem:GETCONF __owningcontrollerprocess (runtime: 0.0003)
+INFO:root:Tor Controller connected
+DEBUG:stem:GETCONF datadirectory (runtime: 0.0003)
+DEBUG:stem:GETINFO version (runtime: 0.0002)
+DEBUG:stem:GETINFO md/all (runtime: 0.2369)
+DEBUG:stem:SETCONF ExitNodes="C656B41AEFB40A141967EBF49D6E69603C9B4A11" (runtime: 0.0012)
+DEBUG:stem:SETCONF ExitNodes="C19B33758B3A5144894233EC4C95D7985B9FD101" (runtime: 0.0025)
+INFO:stem:Error while receiving a control message (SocketClosed): empty socket content
+DEBUG:stem:System call: tor --version (runtime: 0.01)
+INFO:root:Tor Process created
+DEBUG:stem:GETCONF __owningcontrollerprocess (runtime: 0.0006)
+INFO:root:Tor Controller connected
+DEBUG:stem:GETCONF datadirectory (runtime: 0.0005)
+DEBUG:stem:GETINFO version (runtime: 0.0002)
+DEBUG:stem:GETINFO md/all (runtime: 0.1561)
+DEBUG:stem:SETCONF ExitNodes="81EDFBC8F6F5C7CF0ADD5F8E08BC8FABA04089C6" (runtime: 0.0012)
+DEBUG:stem:SETCONF ExitNodes="DC2191663DD4BAECB34F949CCAC3FDA004CE5BCE" (runtime: 0.0016)
