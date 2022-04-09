@@ -168,6 +168,65 @@ class test_httpRequest:
 		...
 
 
+class test_httpRequestBuilder:
+	## NOTE: No need to test the httpRequestTemplate here as this is
+	## handled by the class `test_httpRequestTemplateValidator`
+	## TODO: `httpRequestBuilder` should use `httpRequestTemplateValidator`
+	def test_init_AuthGenInit(self):
+		...
+
+	# def test_init_TemplateValidator(self):
+	# 	...
+
+
+
+	def test_variableReplace_tooManyKeyValues(self):
+		...
+
+	def test_variableReplace_insufficientKeyValues(self):
+		...
+
+	def test_variableReplace_incorrectKey(self):
+		...
+
+	def test_variableReplace_incorrectKeys(self):
+		...
+
+	def test_variableReplace_correctArguments(self):
+		...
+
+
+
+	def test_authenticationGenerate_noUserpass(self):
+		...
+		
+	def test_authenticationGenerate_hasUserpass(self):
+		...
+
+
+
+	def test_handleDerivedArgument(self):
+		...
+
+	def test_templateReplace_noUserpass(self):
+		...
+
+	def test_templateReplace_UninitializedVariable(self):
+		...
+
+
+
+	## NOTE: Entrypoint object method
+	## TODO: Expand the below tests using the above cases
+	def test_build_invalidHTTPRequestTemplate(self):
+		...
+
+	def test_build_invalidArguments(self):
+		...
+
+	def test_build_validRequestTemplateAndArguments(self):
+		...
+
 
 class test_httpRequestTemplateValidator:
 	def test_validateHTTPRequestTemplate_noMandatoryKeys(self):
