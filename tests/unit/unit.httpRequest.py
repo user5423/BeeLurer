@@ -168,5 +168,135 @@ class test_httpRequest:
 		...
 
 
-class test_httpRequestBuilder:
-	...
+
+class test_httpRequestTemplateValidator:
+	def test_validateHTTPRequestTemplate_noMandatoryKeys(self):
+		...
+
+	def test_validateHTTPRequestTemplate_missingMandatoryKeys(self):
+		...
+
+	def test_validateHTTPRequestTemplate_noOptionalKeys(self):
+		...
+
+	def test_validateHTTPRequestTemplate_missingOptionalKeys(self):
+		...
+
+	
+	## NOTE: Method key tests
+	def test_validateHTTPRequestTemplate_method_nullValue(self):
+		...
+
+	def test_validateHTTPRequestTemplate_method_missingKey(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_method_invalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_method_unsupportedValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_method_invalidValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_method_supportedValue(self):
+		...
+
+
+
+	## NOTE: Url key tests
+	## ==> This does NOT test whether the template replaced url is vaid
+	def test_validateHTTPRequestTemplate_url_nullValue(self):
+		...
+
+	def test_validateHTTPRequestTemplate_url_missingKey(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_url_invalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_url_unsupportedValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_url_invalidValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_url_supportedValue(self):
+		...
+
+		
+
+	## NOTE: Body key tests
+	def test_validateHTTPRequestTemplate_body_nullValue(self):
+		...
+
+	def test_validateHTTPRequestTemplate_body_missingKey(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_body_invalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_body_unsupportedValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_body_invalidValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_body_supportedValue(self):
+		...
+
+	## TODO: The body needs to be tested against the content-type
+	## --> That might be a bit trickier
+
+	## NOTE: headers
+	def test_validatedHTTPRequestTemplate_headers_nullValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_headers_missingKey(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_headers_invalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_headers_invalidValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_headers_unsupportedTags(self):
+		## tags are strings starting with / - e.g. /derived
+		...
+
+
+	## NOTE: Variables key tests
+	def test_validateHTTPRequestTemplate_variables_nullValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_variables_invalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_variables_UnusedVariables(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_variables_UnitializedVariables(self):
+		## i.e. a variable is used in the template somewhere but isn't listed
+		## in the variables dict
+		...
+
+
+	## NOTE: Authentication key tests
+	def test_validatedHTTPRequestTemplate_authenticaiton_nullValue(self):
+		...
+	
+	def test_validatedHTTPRequestTemplate_authenticaiton_emptyDict(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_authentication_InvalidType(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_authenticaiton_userpass_invalidType(self):
+		...
+	
+	def test_validatedHTTPRequestTemplate_authenticaiton_userpass_invalidValue(self):
+		...
+
+	def test_validatedHTTPRequestTemplate_authenticaiton_userpass_validValue(self):
+		...
