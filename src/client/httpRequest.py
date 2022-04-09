@@ -125,31 +125,31 @@ class httpRequest:
 	)
 
 	def __post_init__(self):
-		self.createUrl(self.url)
-		self.createHeaders(self.headers)
-		self.createBody(self.body, self._contentType)
-		self.createQuery(self.query)
+		self._createUrl(self.url)
+		self._createHeaders(self.headers)
+		self._createBody(self.body, self._contentType)
+		self._createQuery(self.query)
 
 		self.headers.setHeaders({"content-type": self._contentType})
 	
-	def setHttpMethod(self, method: str) -> None:
+	def _setHttpMethod(self, method: str) -> None:
 		if method not in httpRequest._supportedMethods:
 			raise clientExceptions.UnsupportedHttpMethod
 		else:
 			self.method = method
 
-	def createUrl(self, URL: str) -> None:
+	def _createUrl(self, URL: str) -> None:
 		self.url = url()
 		self.url.setUrl(URL)
 
-	def createBody(self, body: Any, contentType: str) -> None:
+	def _createBody(self, body: Any, contentType: str) -> None:
 		self.body = httpBody()
 		self.body.setBody(body, contentType)
 
-	def createHeaders(self, headers: Dict[str, str]) -> None:
+	def _createHeaders(self, headers: Dict[str, str]) -> None:
 		self.headers.setHeaders(headers)
 
-	def createQuery(self, query: Dict[str, str]) -> None:
+	def _createQuery(self, query: Dict[str, str]) -> None:
 		self.query = httpQuery()
 		self.query.setQueries(query)
 
