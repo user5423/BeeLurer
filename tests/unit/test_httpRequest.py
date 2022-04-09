@@ -6,7 +6,7 @@ from httpRequest import httpAuthGen, httpHeaders, httpBody, \
 						httpQuery, url, httpRequest, httpRequestBuilder
 
 
-class test_httpAuthGen:
+class Test_httpAuthGen:
 	## Currently the only auth that is supported is basic username and password
 	## that is stored in the url query or the headers, or the body
 
@@ -46,7 +46,7 @@ class test_httpAuthGen:
 		...
 		
 
-class test_httpHeaders:
+class Test_httpHeaders:
 	def test_setHeader_noHeaders(self):
 		...
 
@@ -81,7 +81,7 @@ class test_httpHeaders:
 		...
 
 
-class test_httpBody:
+class Test_httpBody:
 	def test_setBody_settingNew(self):
 		...
 
@@ -92,7 +92,7 @@ class test_httpBody:
 		...
 
 
-class test_httpQuery:
+class Test_httpQuery:
 	def test_setQueries_settingNew(self):
 		...
 
@@ -106,7 +106,7 @@ class test_httpQuery:
 		...
 
 
-class test_url:
+class Test_url:
 	def test_setUrl_settingNew(self):
 		...
 
@@ -117,7 +117,7 @@ class test_url:
 		...
 
 
-class test_httpRequest:
+class Test_httpRequest:
 	## NOTE: Object initialization checking
 	def test_init_createUrl_settingNew(self):
 		...
@@ -204,7 +204,7 @@ class test_httpRequest:
 		...
 
 
-class test_httpRequestBuilder:
+class Test_httpRequestBuilder:
 	## NOTE: No need to test the httpRequestTemplate here as this is
 	## handled by the class `test_httpRequestTemplateValidator`
 	## TODO: `httpRequestBuilder` should use `httpRequestTemplateValidator`
@@ -264,7 +264,7 @@ class test_httpRequestBuilder:
 		...
 
 
-class test_httpRequestTemplateValidator:
+class Test_httpRequestTemplateValidator:
 	def test_validateHTTPRequestTemplate_noMandatoryKeys(self):
 		...
 

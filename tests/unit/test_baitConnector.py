@@ -5,7 +5,7 @@ sys.path.insert(0, "src/client/")
 from baitConnector import baitConnector
 
 
-class test_baitConnector:
+class Test_baitConnector:
 	## TODO: Expand these tests from torSessionManager init tests
 	def test_init_baitConnector_invalidTorrcConfig(self):
 		...

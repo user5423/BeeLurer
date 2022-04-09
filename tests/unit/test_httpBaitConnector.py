@@ -4,7 +4,7 @@ sys.path.insert(0, "src/client/")
 
 from baitConnector import httpBaitConnector
 
-class test_httpBaitConnector:
+class Test_httpBaitConnector:
 	def test_init_invalidTorrcConfig(self):
 		...
 
