@@ -14,7 +14,7 @@ import clientExceptions
 
 class httpAuthGen:
 	_usernameWordlistFile = "wordlists/jeanphorn-wordlist-usernames.txt"
-	_userpassFormat = NamedTuple("userpass", ["username", "password"])
+	_userpassFormat = NamedTuple("userpass", [("username", str), ("password", str)])
 
 
 	def __init__(self) -> None:
@@ -104,7 +104,6 @@ class url:
 
 	def setUrl(self, URL: str):
 		## We need to encode and then validate, then create a yarl
-		print(URL)
 		if validators.url(URL):
 			self._url = yarl.URL(URL)
 		else:
