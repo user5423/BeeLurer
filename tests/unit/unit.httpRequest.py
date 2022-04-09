@@ -7,7 +7,10 @@ from httpRequest import httpAuthGen, httpHeaders, httpBody, \
 
 
 class test_httpAuthGen:
-	...
+	def test_generateUserPass_doesReuseUserpass(self):
+		## run this for a while and check if reuses userpass combo
+		...
+
 
 
 class test_httpHeaders:
