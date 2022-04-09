@@ -98,7 +98,7 @@ class baitConnector(torSessionManager):
 		return True
 
 
-class baitHttpConnector(baitConnector, httpRequestBuilder):
+class httpBaitConnector(baitConnector, httpRequestBuilder):
 	def __init__(self, requestFormatPath: str, requestArguments: Dict[str, str], torrcConfig: Optional[configType] = None) -> None:
 		baitConnector.__init__(self, torrcConfig)
 		httpRequestBuilder.__init__(self)

@@ -5,7 +5,7 @@ sys.path.insert(0, './src/client/')
 from torSessionManager import torSessionManager
 
 
-class testTorSessionManager(unittest.TestSuite):
+class testTorSessionManager:
 
     ## These unittests should test: 
     ## 1. torSessionManager._setTorrcConfiguration()
