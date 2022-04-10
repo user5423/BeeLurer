@@ -14,7 +14,7 @@ configType = Dict[str, Union[str, List[str], Dict[str, str]]]
 
 
 class baitConnector(torSessionManager):
-	_connection = NamedTuple("baitConnection", ["username", "password", "datetime"])
+	_connection = NamedTuple("baitConnection", [("username", str), ("password", str), ("datetime", datetime.datetime)])
 
 	def __init__(self, torrcConfig: Optional[configType] = None) -> None:
 		torSessionManager.__init__(self, torrcConfig)
@@ -56,10 +56,10 @@ class baitConnector(torSessionManager):
 
 	## NOTE: Currently we are storing our bait requests in memory
 	## TODO: However, we want to end up storing this in a database 
-	def _logExitNodeConnection(self, fingerprint: str , connectionArgs: Dict[str]) -> None:
+	def _logExitNodeConnection(self, fingerprint: str , connectionArgs: NamedTuple) -> None:
 		## Here we sift through the variables that are used for authentication
 		## TODO: This will be a more extensive function once we allow for other forms of http authentication
-		connection = baitConnector._connection(connectionArgs["username"], connectionArgs["password"], datetime.now())
+		connection = baitConnector._connection(connectionArgs["username"], connectionArgs["password"], datetime.datetime.now())
 		if self.connectionLog.get(fingerprint) is None:
 			self.connectionLog[fingerprint] = [connection]
 		else:
@@ -98,7 +98,7 @@ class baitConnector(torSessionManager):
 		return True
 
 
-class baitHttpConnector(baitConnector, httpRequestBuilder):
+class httpBaitConnector(baitConnector, httpRequestBuilder):
 	def __init__(self, requestFormatPath: str, requestArguments: Dict[str, str], torrcConfig: Optional[configType] = None) -> None:
 		baitConnector.__init__(self, torrcConfig)
 		httpRequestBuilder.__init__(self)
