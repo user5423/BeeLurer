@@ -6,3 +6,7 @@ pycurl
 certifi
 pytest
 
+## async protocol libraries
+aiohttp
+aiosmtplib
+aiomysql
