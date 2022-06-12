@@ -1,3 +1,4 @@
 .vscode
 temp
+secrets
 __pycache__
