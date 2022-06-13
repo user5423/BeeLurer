@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 @dataclass
 class incidentReport:
     senderIP: str
-    receiverIP: str
+    baitIP: str
     baitService: str
     baitPort: str
     exitRelayIP: str
@@ -37,7 +37,7 @@ class _email:
     async def _templateReplace(self, templateString: str, incidentDescriptor: str) -> str:
         return templateString.format(
             senderIP = incidentDescriptor.senderIP,
-            receiverIP = incidentDescriptor.receiverIP,
+            baitIP = incidentDescriptor.baitIP,
             baitService = incidentDescriptor.baitService,
             baitPort = incidentDescriptor.baitPort,
             exitRelayIP = incidentDescriptor.exitRelayIP,
@@ -63,12 +63,12 @@ class _email:
 async def main() -> None:
     em = _email()
 
-    incident = incidentReport(senderIP="10.11.189.14", receiverIP="10.11.189.98", baitService="ftp",
+    incident = incidentReport(senderIP="10.11.189.14", baitIP="10.11.189.98", baitService="ftp",
                                 baitPort=21, exitRelayIP="10.11.182.22", exitRelayMD="...",
                                 baitSetupTS=datetime.now(), baitCatchTS=datetime.now() + timedelta(seconds=4),
                                 rawRequest="xxxx....xxxx")
 
-    out = await em._templateReplace(em._textEmailTemplate, incident)
+    out = await em._templateReplace(em._htmlEmailTemplate, incident)
     print(out)
 
 if __name__ == "__main__":
