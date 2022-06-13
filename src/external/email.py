@@ -22,8 +22,8 @@ class incidentReport:
 
 
 class _email:
-    _htmlEmailPath = "src/external/htmlemail.html"
-    _textEmailPath = "src/external/textemail.txt"
+    _htmlEmailPath = "src/external/email.html"
+    _textEmailPath = "src/external/email.txt"
 
     def __init__(self, *args, **kwargs) -> None:
         """Here we load the any startup secrets/configurations, and templates"""
