@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head></head>
+  
+  <body>
+      <h2>Suspicious Tor Exit Relay Detected</h2>
+      <p>The BeeLurer program has detected a potential malicious exit relay</p>
+      <p></p>
+      <table>
+          <tbody>
+                <tr>
+                    <td>Bait IP</td>
+                    <td>{baitIP}</td>
+                </tr>
+                <tr>
+                    <td>Bait Port</td>
+                    <td>{baitPort}</td>
+                </tr>
+                <tr>
+                    <td>Bait Service</td>
+                    <td>{baitService}</td>
+                </tr>
+                <tr>
+                    <td>Sender IP</td>
+                    <td>{senderIP}</td>
+                </tr>
+                <tr>
+                    <td>Exit Relay IP</td>
+                    <td>{exitRelayIP}</td>
+                </tr>
+                <tr>
+                    <td>Exit Relay Microdescriptor</td>
+                    <td>{exitRelayMD}</td>
+                </tr>
+                <tr>
+                    <td>Bait Setup Timestamp</td>
+                    <td>{baitSetupTS}</td>
+                </tr>
+                <tr>
+                    <td>Bait Catch Timestamp</td>
+                    <td>{baitCatchTS}</td>
+                </tr>
+          </tbody>
+      </table>
+
+      <h4>Raw Request Content</h4>
+      <p>{rawRequest}</p>
+
+      <h4>Additional Information</h4>
+      <p>{additionalInfo}</p>
+
+  </body>
+</html>

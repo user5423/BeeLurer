@@ -1,0 +1,26 @@
+version: "3.3"
+
+services:
+  beelurer-proxy:
+    build: .
+    networks:
+      - proxy-network
+      - baitservice-network
+    tty: true
+    ports:
+      - 80:80
+  beelurer-db:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example_password
+
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    driver: bridge
+  baitservice-network:
+    driver: bridge
+  
+
