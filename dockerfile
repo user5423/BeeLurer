@@ -5,7 +5,7 @@ RUN /bin/bash -c "apt-get install libcurl4-openssl-dev libssl-dev"
 
 WORKDIR /app
 ARG root_dir=/home/davide/Projects/BeeLurer/
-COPY requirements.txt requirements.txt
+COPY src/requirements.txt requirements.txt
 RUN python3.7 -m pip install -r requirements.txt
 
 
