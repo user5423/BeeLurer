@@ -142,6 +142,11 @@ class httpBaitConnector(baitConnector, httpRequestBuilder):
 
 
 
+supportedServices = {
+	"http": httpBaitConnector
+}
+
+
 def main() -> None:
 	bc = baitConnector()
 	bc.run()
