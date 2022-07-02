@@ -1,0 +1,27 @@
+[{
+    "service": "http",
+    "port": 80,
+    "ip": "0.0.0.0",
+    "requests": [
+        {
+            "method": "GET", 
+            "url" : "https://${host}/something?user=${username}&pass=${password}",
+            "headers": {
+                        "content-type": "/derive",
+                        "accept-content": "/derive",
+                        "user-agent": "test user-agent"
+            },
+            "body": null,
+            "variables" : {
+                "host": "/argument"
+            },
+            "authentication": {
+                "userpass": {
+                    "username": "/generate",
+                    "password": "/generate"
+                }
+        
+            }
+        }
+    ]
+}]

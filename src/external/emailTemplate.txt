@@ -1,0 +1,22 @@
+Suspicious Tor Exit Relay Detected
+
+The BeeLurer program has detected a potential malicious exit relay
+
+Bait IP = {baitIP}
+Bait Service = {baitService}
+Bait Port = {baitPort}
+
+Sender IP = {senderIP}
+Exit Relay IP = {exitRelayIP}
+Exit Relay Microdescriptor = {exitRelayMD}
+
+Bait Setup Timestamp = {baitSetupTS}
+Bait Catch Timestamp = {baitCatchTS}
+
+Raw Request Content:
+
+{rawRequest}
+
+AdditionalInformation:
+
+{additionalInfo}

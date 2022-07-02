@@ -1,0 +1,12 @@
+## Unspecified version packages required ##
+stem
+
+## To specify the version
+pycurl
+certifi
+pytest
+
+## async protocol libraries
+aiohttp
+aiosmtplib
+aiomysql

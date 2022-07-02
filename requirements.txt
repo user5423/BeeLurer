@@ -1,12 +1,2 @@
-## Unspecified version packages required ##
-stem
-
-## To specify the version
-pycurl
-certifi
-pytest
-
-## async protocol libraries
-aiohttp
-aiosmtplib
-aiomysql
+## NOTE: This is the requirements needed for the docker-compose setup process
+ruamel.yaml
